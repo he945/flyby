@@ -116,30 +116,37 @@ def flyby(latitude, longitude):
         print(exceptMsg + "\nHTTP GET request for " + data_url + " failed.")
         traceback.print_exc()
 
+
+def testLocation(location, expectedStr):
+    """
+    function to test location against expected next time
+
+    :param location: Location list as  [lat, long]
+    :param expectedStr: Expected string for next datetime
+    :return: void
+    """ 
+    capturedOutput = StringIO.StringIO()
+    print("\nTESTING LATITUDE, LONGITUDE ({0}, {1})".format(location[0], location[1]))
+    sys.stdout = capturedOutput
+    flyby(location[0], location[1])
+    sys.stdout = sys.__stdout__
+    next_time = str(capturedOutput.getvalue().strip())
+    assert next_time == expectedStr
+
 # Unit tests
 class FlybyTest(unittest.TestCase):
-    def test_location(self, loc, expectedStr):
-        capturedOutput = StringIO.StringIO()
-        four_corners_monument_loc = [36.998979, -109.045183]
-        print("\nTESTING LATITUDE, LONGITUDE ({0}, {1})".format(loc[0], loc[1]))
-        sys.stdout = capturedOutput
-        flyby(loc[0], loc[1])
-        sys.stdout = sys.__stdout__
-        next_time = str(capturedOutput.getvalue().strip())
-        self.assertEqual(next_time, expectedStr)
-
     def test(self):
         grand_canyon_loc = [36.098592, -112.097796]
-        self.test_location(grand_canyon_loc, "Next time: 2017-05-12 09:52:17.638297")
+        testLocation(grand_canyon_loc, "Next time: 2017-05-12 09:52:17.638297")
 
         niagara_falls_loc = [43.078154, -79.075891]
-        self.test_location(niagara_falls_loc, "Next time: 2017-05-11 14:20:07.149253")
+        testLocation(niagara_falls_loc, "Next time: 2017-05-11 14:20:07.149253")
 
         four_corners_monument_loc = [36.998979, -109.045183]
-        self.test_location(four_corners_monument_loc, "Next time: 2017-05-04 05:09:59.609665")
+        testLocation(four_corners_monument_loc, "Next time: 2017-05-04 05:09:59.609665")
 
         medsender_hq_loc = [40.720583, -74.001472]
-        self.test_location(medsender_hq_loc, "Next time: 2017-04-28 06:51:59.453947")
+        testLocation(medsender_hq_loc, "Next time: 2017-04-28 06:51:59.453947")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calculate next time a satellite image will be taken given latitude and longitude')
