@@ -10,6 +10,9 @@ import traceback
 import sys
 from datetime import datetime, timedelta
 import argparse
+import StringIO
+import unittest
+
 
 def flyby(latitude, longitude):
     """
@@ -19,6 +22,7 @@ def flyby(latitude, longitude):
     :param longitude: Longitude of location
     :return: void
     """    
+    API_KEY = 'm1DJtfAzuR0pkYdZDa5QYurqX7T9bKAQc4GSGh1m'
     count = 0
     avg_time_delta = 0
     date_format = "%Y-%m-%dT%H:%M:%S"
@@ -32,7 +36,7 @@ def flyby(latitude, longitude):
             print("Both latitude and longitude values must be floats.")
 
         # make HTTP GET request to NASA API
-        data_url = 'https://api.nasa.gov/planetary/earth/assets?lon=' + str(longitude_val) + '&lat=' + str(latitude_val) + '&api_key=DEMO_KEY'
+        data_url = 'https://api.nasa.gov/planetary/earth/assets?lon=' + str(longitude_val) + '&lat=' + str(latitude_val) + '&api_key=' + API_KEY
         data = requests.get(data_url)
 
         json_data = {}
@@ -112,11 +116,47 @@ def flyby(latitude, longitude):
         print(exceptMsg + "\nHTTP GET request for " + data_url + " failed.")
         traceback.print_exc()
 
+# Unit tests
+class FlybyTest(unittest.TestCase):
+    def test_location(self, loc, expectedStr):
+        capturedOutput = StringIO.StringIO()
+        four_corners_monument_loc = [36.998979, -109.045183]
+        print("\nTESTING LATITUDE, LONGITUDE ({0}, {1})".format(loc[0], loc[1]))
+        sys.stdout = capturedOutput
+        flyby(loc[0], loc[1])
+        sys.stdout = sys.__stdout__
+        next_time = str(capturedOutput.getvalue().strip())
+        self.assertEqual(next_time, expectedStr)
+
+    def test(self):
+        grand_canyon_loc = [36.098592, -112.097796]
+        self.test_location(grand_canyon_loc, "Next time: 2017-05-12 09:52:17.638297")
+
+        niagara_falls_loc = [43.078154, -79.075891]
+        self.test_location(niagara_falls_loc, "Next time: 2017-05-11 14:20:07.149253")
+
+        four_corners_monument_loc = [36.998979, -109.045183]
+        self.test_location(four_corners_monument_loc, "Next time: 2017-05-04 05:09:59.609665")
+
+        medsender_hq_loc = [40.720583, -74.001472]
+        self.test_location(medsender_hq_loc, "Next time: 2017-04-28 06:51:59.453947")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calculate next time a satellite image will be taken given latitude and longitude')
     parser.add_argument('-lat','--latitude', help='Latitude of location')
     parser.add_argument('-lon','--longitude', help='Longitude of location')
+    parser.add_argument('-u', '--unittest', help='Run unit tests', action='store_true')
     args = parser.parse_args()
 
-    if args.latitude is not None and args.longitude:
-        flyby(args.latitude, args.longitude)
+    # run unit tests if -u argument passed
+    if args.unittest:
+        print("RUNNING UNIT TESTS...")
+        runner = unittest.TextTestRunner(verbosity=2)
+        result = runner.run(unittest.makeSuite(FlybyTest))
+    else:
+        # check that latitude and longitude arguments have been passed in
+        if args.latitude is not None and args.longitude is not None:
+            flyby(args.latitude, args.longitude)
+        else:
+            print("USAGE: python flyby.py -lat <LATITUDE> -lon <LONGITUDE>")
+
