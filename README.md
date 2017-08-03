@@ -5,3 +5,6 @@ Python version 3.7
 
 # Sample usage
 `$ python flyby.py -lat 40.720583 -lon -74.001472`
+
+# Run unit tests
+`$ python flyby.py -u`
