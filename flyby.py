@@ -10,8 +10,13 @@ import traceback
 import sys
 from datetime import datetime, timedelta
 import argparse
-import StringIO
+import os
 import unittest
+from dotenv import load_dotenv, find_dotenv
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 def flyby(latitude, longitude):
@@ -21,8 +26,8 @@ def flyby(latitude, longitude):
     :param latitude: Latitude of location
     :param longitude: Longitude of location
     :return: void
-    """    
-    API_KEY = 'm1DJtfAzuR0pkYdZDa5QYurqX7T9bKAQc4GSGh1m'
+    """
+    API_KEY = os.environ.get("API_KEY")
     count = 0
     avg_time_delta = 0
     date_format = "%Y-%m-%dT%H:%M:%S"
@@ -59,7 +64,7 @@ def flyby(latitude, longitude):
         if count == 0: # print error message if count is 0
             print(exceptMsg + "\nHTTP GET request for " + data_url + " had 0 count in JSON payload, could not calculate avg_time_delta")
             return
-        
+
         # print error message if no results array found in JSON
         if 'results' not in json_data:
             print(exceptMsg + "\nHTTP GET request for " + data_url + " did not contain 'results' key in JSON")
@@ -70,7 +75,7 @@ def flyby(latitude, longitude):
         if results_count != count: # check that number of results match the count in JSON payload
             print(exceptMsg + "\nHTTP GET request for " + data_url + " count of {0}, did not match number of results {1}".format(count, results_count))
             return
-        
+
         # print error message if results array is empty
         if results_count == 0:
             print(exceptMsg + "\nHTTP GET request for " + data_url + " had empty results")
@@ -124,7 +129,7 @@ def testLocation(location, expectedStr):
     :param location: Location list as  [lat, long]
     :param expectedStr: Expected string for next datetime
     :return: void
-    """ 
+    """
     capturedOutput = StringIO.StringIO()
     print("\nTESTING LATITUDE, LONGITUDE ({0}, {1})".format(location[0], location[1]))
     sys.stdout = capturedOutput
@@ -154,6 +159,9 @@ if __name__ == "__main__":
     parser.add_argument('-lon','--longitude', help='Longitude of location')
     parser.add_argument('-u', '--unittest', help='Run unit tests', action='store_true')
     args = parser.parse_args()
+
+    # load environment variables (API_KEY) from .env file
+    load_dotenv(find_dotenv())
 
     # run unit tests if -u argument passed
     if args.unittest:
